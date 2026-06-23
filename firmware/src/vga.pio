@@ -1,0 +1,32 @@
+.pio_version 1
+
+.program VGA
+.side_set 1 opt
+    pull block
+    mov y, osr
+    pull block
+.wrap_target    
+    mov x, osr side 0
+loopLow:    
+    wait 1 irq prev 0 
+    jmp x-- loopLow
+    irq set 0 rel side 1  // set start of high level vsync/hsync
+    mov x, y ; SWAPPED with prev line
+loopHigh:
+    wait 1 irq prev 0 
+    jmp x-- loopHigh
+.wrap
+
+% c-sdk {
+static inline void VGA_program_init(PIO pio, uint sm, uint offset, uint SYNCpin) {
+    pio_sm_config c = VGA_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, SYNCpin); 
+
+    pio_gpio_init(pio, SYNCpin);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, SYNCpin, 1, true);
+
+    pio_sm_init(pio, sm, offset, &c);
+//;    pio_sm_set_enabled(pio, sm, true);
+}
+%}

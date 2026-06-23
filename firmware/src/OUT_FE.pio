@@ -1,0 +1,87 @@
+.pio_version 1
+
+.program OUT_FE // handle OUT CPU command to set border, mic and ear
+.wrap_target // CHECK PINDIRS!!!!! and CHECK for renterability!!
+start:
+    wait 1 gpio 38 // /UCLK = 1 so CLK = 0 to ensure we are in active CPU cycle
+    mov osr, ::pins // read data, cwe, ucs, ubus, mreq, iorq, a0 and reverse 
+    out x, 20 //take ioreq and A0 to x
+    jmp x-- start // if ioreq+A0 != 0 return (may be wait to skip this cycle completely???)
+    jmp pin start // if /CWE = 1 return (may be wait to skip this cycle completely???)
+    mov osr, ::osr // reverse
+    out null, 20 //discard zeros after reversing
+    out isr, 3 //send border color to DMA via ISR and FIFO
+    push block [31]   // wait cycles to wait till T3 so CPU completed io operation. Consider autopush!!!!
+    out pins, 2 [31] // out mic and ear
+//    mov pins, ~osr // some sources says bit value 0 = speacker/mic active, 1 = speacker/mic inactive.  
+.wrap
+
+% c-sdk {
+static inline void OUT_FE_program_init(PIO pio, uint sm, uint offset, uint CWEpin, uint Q0pin, uint MICpin) {
+    pio_sm_config c = OUT_FE_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, MICpin, 2);
+    sm_config_set_in_pins(&c, Q0pin);
+    sm_config_set_in_pin_count(&c, 14);
+    sm_config_set_jmp_pin(&c, CWEpin);
+
+/*
+    pio_gpio_init(pio, Q0pin);
+    pio_gpio_init(pio, Q0pin+1);
+    pio_gpio_init(pio, Q0pin+2);    
+    pio_gpio_init(pio, Q0pin+3);
+    pio_gpio_init(pio, Q0pin+4);
+    pio_gpio_init(pio, Q0pin+5);
+    pio_gpio_init(pio, Q0pin+6);
+    pio_gpio_init(pio, Q0pin+7);
+    pio_gpio_init(pio, Q0pin+12); //IORQ
+    pio_gpio_init(pio, Q0pin+13); //A0
+*/
+
+    pio_gpio_init(pio, CWEpin);
+    pio_gpio_init(pio, MICpin);
+    pio_gpio_init(pio, MICpin+1); // EAR
+    
+    pio_sm_set_consecutive_pindirs(pio, sm, MICpin, 2, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, CWEpin, 1, false);
+  //;  pio_sm_set_consecutive_pindirs(pio, sm, Q0pin, 8, false);
+//;    pio_sm_set_consecutive_pindirs(pio, sm, Q0pin+12, 2, false); // IORQ and A0
+
+    pio_sm_init(pio, sm, offset, &c);
+
+//;    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+/*
+    wait 0 gpio 29 // /IOREQ 
+    wait 0 gpio 38 // /UCLK to ensure we are in active CPU cycle
+    jmp pin start // if /CWE = 1 return (may be wait to skip this cycle completely???)
+    mov osr, pins // read A0 and data 
+    out x, 1 //take A0 to x
+    jmp x-- start // if A0 != 0 return (may be wait to skip this cycle completely???)
+    out isr, 3 //send border color to DMA via ISR and FIFO
+    push block [31]   // wait cycles to wait till T3 so CPU completed io operation. Consider autopush!!!!
+    out pins, 2 [31] // out mic and ear
+
+
+% c-sdk {
+static inline void OUT_FE_program_init(PIO pio, uint sm, uint offset, uint CWEpin, uint A0pin, uint MICpin) {
+    pio_sm_config c = OUT_FE_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, MICpin, 2);
+    sm_config_set_in_pins(&c, A0pin);
+    sm_config_set_in_pin_count(&c, 6);
+    sm_config_set_jmp_pin(&c, CWEpin);
+    // Set this pin's GPIO function (connect PIO to the pad)
+    pio_gpio_init(pio, MICpin);
+    pio_gpio_init(pio, MICpin+1);
+    // Set the pin direction to output at the PIO
+    pio_sm_set_consecutive_pindirs(pio, sm, MICpin, 2, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, A0pin, 9, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, CWEpin, 1, false);
+    // Load our configuration, and jump to the start of the program
+    pio_sm_init(pio, sm, offset, &c);
+    // Set the state machine running
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}    
+*/

@@ -1,0 +1,39 @@
+.pio_version 1
+
+.program Read_line
+.side_set 2 
+.wrap_target
+    wait 1 irq 2 side 0b01 [2]; UBUS = 0 /UCS = 1 allowing CPU to work, skip 1 pixel of the border and h-back
+    set y, 15 side 0b01 [3] ; wait 1 more pixel to add to the border and h-back
+readline:
+    set x, 3 side 0b11 [1] ; UBUS = 1 and /UCS = 1
+    set pindirs, 1 side 0b11 [1]; set /URD direction to output, /UCS = 1
+read16pixels:
+    irq set 3 side 0b10
+    wait 1 irq 5 side 0b10 [1]
+    jmp x-- read16pixels side 0b10
+    set pindirs, 0 side 0b11 [2]; /UBUS = 1, /UCS = 1 to give it time to deselect VRAM and wait for it, set /URD direction to input    
+    nop side 0b01  ; // think if it make sense to have 1 wait cycle here instead of previous line
+    jmp y-- readline side 0b01 [7] ; /UCS = 1 and UBUS = 0 to allow CPU working 2 T-cycles
+    irq set 4 side 0b01; signal of end of line
+.wrap
+ 
+% c-sdk {
+static inline void Read_line_program_init(PIO pio, uint sm, uint offset, uint UCSpin, uint URDpin) {
+    pio_sm_config c = Read_line_program_get_default_config(offset);
+    sm_config_set_clkdiv(&c, 11); // 14Mhz 
+    sm_config_set_sideset_pins(&c, UCSpin);
+    sm_config_set_set_pins(&c, URDpin, 1);
+
+    pio_gpio_init(pio, UCSpin);
+    pio_gpio_init(pio, UCSpin+1);    //UBUS
+    pio_gpio_init(pio, URDpin);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, UCSpin, 2, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, URDpin, 1, false);
+
+    pio_sm_init(pio, sm, offset, &c);
+
+    //;pio_sm_set_enabled(pio, sm, true);
+}
+%}

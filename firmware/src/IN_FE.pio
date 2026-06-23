@@ -1,0 +1,58 @@
+.pio_version 1
+
+.program IN_FE // handle IN CPU command to get keyboard and tape
+.wrap_target 
+start:
+    wait 1 gpio 38  // CLK = 0 (/UCLK = 1)
+    mov osr, pins // read pins from /IOREQ, /A0, /URD to /TAPE
+    out x, 3 // get /IOREQ, A0 and /URD
+    jmp x-- start [16] // if /IOREQ + /A0 + /URD != 0 return and wait for next T or for Tw if = 0
+    out null, 2 [18]// discard MIC and EAR and wait for T3
+    wait 0 gpio 26 // check if UBUS = 0 so we are on active cycle
+    mov pindirs, ~null
+    out pins, 8 // out to data bus 
+    wait 1 jmppin // wait for /IOREQ reset
+    mov pindirs, null // wait some time for next CPU cycle just in case
+.wrap
+
+% c-sdk {
+static inline void IN_FE_program_init(PIO pio, uint sm, uint offset, uint Q0pin, uint IOREQpin) {
+    pio_sm_config c = IN_FE_program_get_default_config(offset);
+    sm_config_set_clkdiv(&c, 2);
+    sm_config_set_out_pins(&c, Q0pin, 8);
+    sm_config_set_in_pins(&c, IOREQpin);
+    sm_config_set_in_pin_count(&c, 12);
+    sm_config_set_jmp_pin(&c, IOREQpin);
+
+//; Set this pin's GPIO function (connect PIO to the pad)
+    pio_gpio_init(pio, Q0pin);
+    pio_gpio_init(pio, Q0pin+1);
+    pio_gpio_init(pio, Q0pin+2);
+    pio_gpio_init(pio, Q0pin+3);
+    pio_gpio_init(pio, Q0pin+4);
+    pio_gpio_init(pio, Q0pin+5);
+    pio_gpio_init(pio, Q0pin+6);
+    pio_gpio_init(pio, Q0pin+7);                      
+
+//;    pio_gpio_init(pio, IOREQpin);
+//;    pio_gpio_init(pio, IOREQpin+1); // A0
+//;    pio_gpio_init(pio, IOREQpin+2); // /URD
+    pio_gpio_init(pio, IOREQpin+5); // KB1
+    pio_gpio_init(pio, IOREQpin+6); // KB2
+    pio_gpio_init(pio, IOREQpin+7); // KB3
+    pio_gpio_init(pio, IOREQpin+8); // KB4
+    pio_gpio_init(pio, IOREQpin+9); // KB5
+    pio_gpio_init(pio, IOREQpin+11); //TAPE
+
+//;    pio_sm_set_consecutive_pindirs(pio, sm, Q0, 8, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, Q0, 8, false);
+//;    pio_sm_set_consecutive_pindirs(pio, sm, IOREQpin, 3, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, IOREQpin+5, 5, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, IOREQpin+11, 1, false);    
+
+    pio_sm_init(pio, sm, offset, &c);
+
+;//    pio_sm_set_enabled(pio, sm, true);
+}
+%}    
+

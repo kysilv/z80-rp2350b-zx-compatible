@@ -1,0 +1,24 @@
+.pio_version 1
+
+.program Read_frame
+    pull block ; 192 lines
+.wrap_target
+    mov x, osr
+    wait 1 irq 1 ; wait for left top corner
+lines:
+    irq set 2 ; trigger line
+    wait 1 irq 4 [31] ; wait till end of line (32*2 = 64 border pixels spent here)
+    nop [31] ; 64+32*2 = 128 border pixels
+    jmp x-- lines [28] ; 128 + 29*2 + 2 at line 9 + 4 in Read_line = 96 border pixels + 96 horisontal flyback, total = 256 active pxs + 96 border + 96 flyback = 448 pxs
+.wrap
+ 
+% c-sdk {
+static inline void Read_frame_program_init(PIO pio, uint sm, uint offset) {
+    pio_sm_config c = Read_frame_program_get_default_config(offset);
+    sm_config_set_clkdiv(&c, 44); //3.5MHz //22); // 7MHz
+
+    pio_sm_init(pio, sm, offset, &c);
+
+//;    pio_sm_set_enabled(pio, sm, true);
+}
+%}

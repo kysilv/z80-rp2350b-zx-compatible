@@ -1,0 +1,45 @@
+.pio_version 1
+
+.program Read_VRAM
+.side_set 1 
+.in 8 left auto 8
+.out 14 right auto 14
+.wrap_target  
+    wait 1 irq 3 side 1
+    mov pindirs, ~NULL side 1 ; set ULA address lines as output
+    out pins, 14 side 0 [15] ; set address and set /URD active and wait 100ns
+    in pins, 8 side 0 ; read data
+    mov pindirs, NULL side 1 ; set ULA address lines as input and set /URD inactive
+    irq set 5 side 1 ; signal end of read cycle
+.wrap
+ 
+% c-sdk {
+static inline void Read_VRAM_program_init(PIO pio, uint sm, uint offset, uint URDpin, uint Y0pin, uint Q0pin) {
+    pio_sm_config c = Read_VRAM_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, URDpin);
+    sm_config_set_out_pins(&c, Y0pin, 14);
+    sm_config_set_in_pins(&c, Q0pin);
+    sm_config_set_in_pin_count(&c, 8);
+
+    pio_gpio_init(pio, Y0pin);
+    pio_gpio_init(pio, Y0pin+1);
+    pio_gpio_init(pio, Y0pin+2);
+    pio_gpio_init(pio, Y0pin+3);
+    pio_gpio_init(pio, Y0pin+4);
+    pio_gpio_init(pio, Y0pin+5);
+    pio_gpio_init(pio, Y0pin+6);
+    pio_gpio_init(pio, Y0pin+7);
+    pio_gpio_init(pio, Y0pin+8);
+    pio_gpio_init(pio, Y0pin+9);
+    pio_gpio_init(pio, Y0pin+10);
+    pio_gpio_init(pio, Y0pin+11);
+    pio_gpio_init(pio, Y0pin+12);
+    pio_gpio_init(pio, Y0pin+13);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, Y0pin, 14, false);
+
+    pio_sm_init(pio, sm, offset, &c);
+
+//;    pio_sm_set_enabled(pio, sm, true);
+}
+%}

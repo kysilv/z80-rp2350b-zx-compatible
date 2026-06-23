@@ -1,0 +1,31 @@
+.pio_version 1
+
+.program activevideo
+    pull block
+    mov y, osr
+    pull block
+.wrap_target    
+    wait 1 irq 1 //wait for start of high level vsync
+;    wait 1 gpio 38 ; wait for CLK = 0    
+    irq next set 0 // signal to INT generator 
+    mov x, y
+vblank:
+    wait 1 irq 0 //wait for start of high level hsync 
+    jmp x-- vblank 
+;    irq set 2 // commented out - just wait one more hline and only then start active frame
+    mov x, osr
+hactive:    
+    wait 1 irq 0 // wait for start of high level hsync 
+    irq set 2 // set irq to indicate start of visible (active) line
+    jmp x-- hactive
+.wrap
+
+% c-sdk {
+static inline void activevideo_program_init(PIO pio, uint sm, uint offset) {
+    pio_sm_config c = activevideo_program_get_default_config(offset);
+
+    pio_sm_init(pio, sm, offset, &c);
+
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}    

@@ -1,0 +1,37 @@
+.pio_version 1
+
+.program VRAM_VGA
+    pull block
+    mov y, osr //352 pixels, 352 bytes
+.wrap_target
+    wait 1 irq 2 // wait for active line start
+    set x, 6
+backporch:
+    jmp x-- backporch [29] // hline backporch and center the visible line 
+    mov x, y
+hline:
+    pull block
+    out pins, 4 [1]
+    jmp x-- hline
+    set pins, 0
+.wrap
+
+% c-sdk {
+static inline void VRAM_VGA_program_init(PIO pio, uint sm, uint offset, uint VGApin) {
+    pio_sm_config c = VRAM_VGA_program_get_default_config(offset);
+    sm_config_set_clkdiv(&c, 2.75);
+    sm_config_set_set_pins(&c, VGApin, 4);
+    sm_config_set_out_pins(&c, VGApin, 4);
+
+    pio_gpio_init(pio, VGApin);
+    pio_gpio_init(pio, VGApin+1);
+    pio_gpio_init(pio, VGApin+2);
+    pio_gpio_init(pio, VGApin+3);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, VGApin, 4, true);
+
+    pio_sm_init(pio, sm, offset, &c);
+
+;//    pio_sm_set_enabled(pio, sm, true);
+}
+%}

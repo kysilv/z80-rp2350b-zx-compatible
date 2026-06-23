@@ -1,0 +1,31 @@
+.pio_version 1
+
+.program INT    
+    pull block // 892 to wait 
+.wrap_target    
+    wait 1 irq 0 [31] // wait for high level vsync (from activevideo.pio) and then wait a bit more
+    nop [23] // ... and more 
+    set pins, 0 [1] // /INT = 0 for 32 T-cycles
+    set pins, 1     // /INT = 1
+    mov x, osr
+wait14335:
+    jmp x-- wait14335
+    irq set 1 // signal to start visual frame 
+.wrap
+
+% c-sdk {
+static inline void INT_program_init(PIO pio, uint sm, uint offset, uint INTpin) {
+    pio_sm_config c = INT_program_get_default_config(offset);
+    sm_config_set_clkdiv(&c, 704); // 704 = 218750Hz = 16 T-cycles
+    sm_config_set_set_pins(&c, INTpin, 1);
+
+    pio_gpio_init(pio, INTpin);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, INTpin, 1, true);
+
+    pio_sm_init(pio, sm, offset, &c);
+
+//;    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+

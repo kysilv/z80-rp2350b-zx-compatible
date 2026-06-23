@@ -1,0 +1,18 @@
+.pio_version 0 // only requires PIO version 0
+
+.program MCLK
+
+.wrap_target
+    irq set 0
+.wrap
+
+% c-sdk {
+static inline void MCLK_program_init(PIO pio, uint sm, uint offset) {
+    pio_sm_config c = MCLK_program_get_default_config(offset);
+    sm_config_set_clkdiv(&c, 22); //7MHz
+
+    pio_sm_init(pio, sm, offset, &c);
+
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
