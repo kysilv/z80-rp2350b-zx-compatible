@@ -309,15 +309,16 @@ int main()
     
     MCLK_program_init(MCLKpio, MCLKsm, MCLKoffset);
     
-    multicore_launch_core1(handle_VRAM_read);
+    multicore_launch_core1(handle_VRAM_read); // core1 to handle video RAM read process 
+
     dma_start_channel_mask((1u << ctrl_chan));    
 
-    MCLKpio->ctrl = 0b101111111110000111100001111;
+    MCLKpio->ctrl = 0b101111111110000111100001111; // start everything at once
 
-    sleep_ms(3245);
+    sleep_ms(3245); // wait for VGA monitor to respond
 
     gpio_put(Z80Reset, true); // set CPU RESET inactive
 
-    while (true) {}
+    while (true) {} // forever...
 
 }

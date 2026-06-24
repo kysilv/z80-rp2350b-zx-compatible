@@ -10,8 +10,8 @@
 loopLow:    
     wait 1 irq prev 0 
     jmp x-- loopLow
-    irq set 0 rel side 1  // set start of high level vsync/hsync
-    mov x, y ; SWAPPED with prev line
+    irq set 0 rel side 1 ; // set start of high level vsync/hsync
+    mov x, y 
 loopHigh:
     wait 1 irq prev 0 
     jmp x-- loopHigh
