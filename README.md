@@ -25,7 +25,7 @@ This is a retrocomputer compatible with ZX Spectrum and based on real Z80 + disc
 
 ## Folders:
 
-**firmware**: rp2350b firmware sources 
+**firmware**: Source code for rp2350b covering ULA functionality (C + PIO ASM)
 
 **hardware**: Pictures of schematic and pcbs. KiCAD project is not ready yet, has bugs and issues (see photos of fixed pcb in Photo folder) so only pictures for now until the project fixed and ready.
 
