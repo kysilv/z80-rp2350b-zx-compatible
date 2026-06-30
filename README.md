@@ -27,6 +27,8 @@ This is a retrocomputer compatible with ZX Spectrum and based on real Z80 + disc
 
 **firmware**: Source code for rp2350b covering ULA functionality (C + PIO ASM)
 
-**hardware**: Pictures of schematic and pcbs. KiCAD project is not ready yet, has bugs and issues (see photos of fixed pcb in Photo folder) so only pictures for now until the project fixed and ready.
+**hardware**: Pictures of schematic and pcbs. KiCAD project of the computer is not ready yet, has bugs and issues (see photos of fixed pcb in Photo folder) so only pictures for now until the project fixed and ready.
+	
+		KiCAD project of Joystick interface is there. 
 
 **photos**: Photos of the device in process of tuning and some "screenshots".
