@@ -30,3 +30,5 @@ This is a retrocomputer compatible with ZX Spectrum and based on real Z80 + disc
 **hardware**: Pictures of schematic and pcbs, KiCAD projects of the computer and Joystick interface. There are pictures of the first version with a lot of fixes. 
 
 **photos**: Photos of the device in process of tuning and some "screenshots".
+
+Press: https://hackaday.com/2026/07/13/its-a-spectrum-with-an-rp2350-ula/
