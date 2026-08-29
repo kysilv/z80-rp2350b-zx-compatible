@@ -11,7 +11,7 @@ This is a retrocomputer compatible with ZX Spectrum and based on real Z80 + disc
 
 **ULA**: WeAct RP2350B Core board
 
-**Video**: VGA (DE-15) 720x576p emulating Spectrum PAL resolution, HDMI (not implemented yet).
+**Video**: VGA (DE-15) and DVI over HDMI connector, 720x576p emulating Spectrum PAL resolution.
 
 **Audio**: Speaker on board
 
