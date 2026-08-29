@@ -4,7 +4,7 @@
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "pico/multicore.h"
-
+#include "hardware/pwm.h"
 #include "Pin_defs.h"
 
 #include "MCLK.pio.h"
@@ -98,7 +98,8 @@ void dma_handler() {
 
 int main()
 {
-    set_sys_clock_khz(154000, true);
+//    set_sys_clock_khz(154000, true);
+    set_sys_clock_khz(189000, true);    
 
     gpio_init(UCLK); 
     gpio_set_dir(UCLK, true);
@@ -116,7 +117,9 @@ int main()
     gpio_init(UBUS); 
     gpio_set_dir(UBUS, true);
     gpio_put(UBUS, true);  // set UBUS = 1
-/*
+
+
+  /*  
     gpio_init(EAR); 
     gpio_set_drive_strength(EAR, GPIO_DRIVE_STRENGTH_4MA);
     gpio_set_dir(EAR, true); // direction = OUT
@@ -147,7 +150,6 @@ int main()
     gpio_set_dir(BRIGHT, true); // direction = OUT
     gpio_put(BRIGHT, false); // 
 */
-
     PIO MCLKpio = pio0;
     uint MCLKsm = 0;
     uint MCLKoffset = 0;
@@ -286,15 +288,27 @@ int main()
 
     CPUCLK_program_init(MCLKpio, CPUCLKsm, CPUCLKoffset, UCLK, UBUS);
     VGA_program_init(VGApio, VGA_HSYNCsm, VGAoffset, HSYNC);
-    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 207-1); //hsync high in 7MHz clocks
-    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 17-1); // hsync low  in 7MHz clocks
+
+//    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 207-1); //hsync high in 7MHz clocks 207
+//    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 17-1); // hsync low  in 7MHz clocks
+
+    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 800-1-2); //hsync high in 27MHz clocks
+    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 64-1-1); // hsync low in 27MHz clocks
+    
+
     VGA_program_init(VGApio, VGA_VSYNCsm, VGAoffset, VSYNC);
-    pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  (69888-112*5)*2-1);
-    pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 112*5*2-1); 
+
+//    pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  (69888-112*5)*2-1); 
+//    pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 112*5*2-1); 
+
+    pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  534816-1-2); // must be 535680 for 620 active lines, 534816 for 619 lines
+    pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 4320-1-1); // VSYNC = low for 5 lines 4320
+
+
     activevideo_program_init(VGApio, activevideosm, activevideooffset);
     pio_sm_put_blocking(VGApio, activevideosm, 38-1); //39 lines to skip for vertical backporch
     pio_sm_put_blocking(VGApio, activevideosm, 575-1); //576 lines in frame
-    VRAM_VGA_program_init(VGApio, VRAM_VGAsm, VRAM_VGAoffset, VGA_B);
+    VRAM_VGA_program_init(VGApio, VRAM_VGAsm, VRAM_VGAoffset, VGA_B, DE);
     pio_sm_put_blocking(VGApio, VRAM_VGAsm, 352-1); //352 pixels in line
 
     INT_program_init(Read_VRAMpio, INTsm, INToffset, INT);
@@ -306,12 +320,29 @@ int main()
 
     IN_FE_program_init(MCLKpio, IN_FEsm, IN_FEoffset, Q0, IORQ);
     OUT_FE_program_init(MCLKpio, OUT_FEsm, OUT_FEoffset, CWE, Q0, MIC);
-    
+
     MCLK_program_init(MCLKpio, MCLKsm, MCLKoffset);
-    
+
+// set up HDMI/DVI pixel clock:    
+
+    gpio_set_function(PXLCLK, GPIO_FUNC_PWM);
+
+    uint slice = pwm_gpio_to_slice_num(PXLCLK);
+    uint chan  = pwm_gpio_to_channel(PXLCLK);
+
+    pwm_config cfg = pwm_get_default_config();
+
+    pwm_config_set_clkdiv_int_frac(&cfg, 1, 0); 
+    pwm_config_set_wrap(&cfg, 6); // 189000000/(7*(1+0/16)) = 27,000,000Hz
+    pwm_init(slice, &cfg, false);
+
+    pwm_set_chan_level(slice, chan, 3);  // 4?
+
     multicore_launch_core1(handle_VRAM_read); // core1 to handle video RAM read process 
 
     dma_start_channel_mask((1u << ctrl_chan));    
+
+    pwm_set_enabled(slice, true);
 
     MCLKpio->ctrl = 0b101111111110000111100001111; // start everything at once
 
@@ -319,6 +350,6 @@ int main()
 
     gpio_put(Z80Reset, true); // set CPU RESET inactive
 
-    while (true) {} // forever...
+    while (true) {tight_loop_contents();} // forever...
 
 }

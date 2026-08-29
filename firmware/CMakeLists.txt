@@ -63,6 +63,7 @@ target_link_libraries(rp2350bULA
         pico_stdlib
         hardware_pio
         hardware_dma
+        hardware_pwm
         pico_multicore
         )
 

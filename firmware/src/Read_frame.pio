@@ -15,8 +15,8 @@ lines:
 % c-sdk {
 static inline void Read_frame_program_init(PIO pio, uint sm, uint offset) {
     pio_sm_config c = Read_frame_program_get_default_config(offset);
-    sm_config_set_clkdiv(&c, 44); //3.5MHz 
-
+//;    sm_config_set_clkdiv(&c, 44); //3.5MHz 
+    sm_config_set_clkdiv(&c, 54); //3.5MHz 
     pio_sm_init(pio, sm, offset, &c);
 
 //;    pio_sm_set_enabled(pio, sm, true);

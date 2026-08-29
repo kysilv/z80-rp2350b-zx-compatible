@@ -32,8 +32,8 @@
 #define VGA_R 41
 #define VGA_G 42
 #define BRIGHT 43
-#define TX2_N 44
-#define TX2_P 45
+#define DE 44
+#define PXLCLK 45
 #define HSYNC 46
 #define VSYNC 47
 

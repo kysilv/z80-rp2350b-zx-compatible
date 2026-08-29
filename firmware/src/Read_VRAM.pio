@@ -16,6 +16,7 @@
 % c-sdk {
 static inline void Read_VRAM_program_init(PIO pio, uint sm, uint offset, uint URDpin, uint Y0pin, uint Q0pin) {
     pio_sm_config c = Read_VRAM_program_get_default_config(offset);
+    sm_config_set_clkdiv_int_frac8(&c, 1, 64); // 151.2MHz
     sm_config_set_sideset_pins(&c, URDpin);
     sm_config_set_out_pins(&c, Y0pin, 14);
     sm_config_set_in_pins(&c, Q0pin);
