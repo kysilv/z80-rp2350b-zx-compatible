@@ -5,10 +5,9 @@
 start:
     wait 1 gpio 38  // CLK = 0 (/UCLK = 1)
     mov osr, pins // read pins from /IOREQ, /A0, /URD to /TAPE
-    out x, 3 [18] // get /IOREQ, A0 and /URD [18]
-    jmp x-- start [31] // if /IOREQ + /A0 + /URD != 0 return and wait for next T or for Tw if = 0  [16]
-    out null, 2 [31]// discard MIC and EAR and wait for T3  [18]
-//    nop [8]
+    out x, 3 [18] // get /IOREQ, A0 and /URD 
+    jmp x-- start [31] // if /IOREQ + /A0 + /URD != 0 return and wait for next T or for Tw if = 0 
+    out null, 2 [31]// discard MIC and EAR and wait for T3 
     wait 0 gpio 26 // check if UBUS = 0 so we are on active cycle
     mov pindirs, ~null
     out pins, 8 // out to data bus 
@@ -19,8 +18,6 @@ start:
 % c-sdk {
 static inline void IN_FE_program_init(PIO pio, uint sm, uint offset, uint Q0pin, uint IOREQpin) {
     pio_sm_config c = IN_FE_program_get_default_config(offset);
-// ;   sm_config_set_clkdiv(&c, 2);
-//  ;  sm_config_set_clkdiv_int_frac8(&c, 2, 128);
 
     sm_config_set_out_pins(&c, Q0pin, 8);
     sm_config_set_in_pins(&c, IOREQpin);

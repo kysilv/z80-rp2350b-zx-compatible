@@ -1,31 +1,26 @@
 .pio_version 1
 
 .program OUT_FE // handle OUT CPU command to set border, mic and ear
-//.out 2 left
 .wrap_target 
 start:
-    wait 1 gpio 38 // /UCLK = 1 so CLK = 0 to ensure we are in active CPU cycle
-    mov osr, ::pins // read data, cwe, ucs, ubus, mreq, iorq, a0 and reverse 
-//    mov osr, pins // read data, cwe, ucs, ubus, mreq, iorq, a0 and reverse 
-    out x, 20 //take ioreq and A0 to x
-    jmp x-- start // if ioreq+A0 != 0 return (may be wait to skip this cycle completely???)
-    jmp pin start // if /CWE = 1 return (may be wait to skip this cycle completely???)
-    mov osr, ::osr // reverse
-    out null, 20 //discard zeros after reversing
-//    out null, 7 //discard zeros after reversing    
-//    out pins, 2 [31] // out mic and ear  // wait cycles to wait till T3 so CPU completed io operation. 
-    out isr, 3 //send border color to DMA via ISR and FIFO
-//    mov isr, ::osr
-    push block [31] //;  Consider autopush!!!!
-    out pins, 2 [31] // out mic and ear  // wait cycles to wait till T3 so CPU completed io operation. 
-//    mov pins, ~osr // some sources says bit value 0 = speacker/mic active, 1 = speacker/mic inactive.  
-//    wait 1 jmppin // wait for /CWE = 1
+    wait 1 gpio 38 //; /UCLK = 1 so CLK = 0 to ensure we are in active CPU cycle
+    mov osr, ::pins //; read data, cwe, ucs, ubus, mreq, iorq, a0 and reverse 
+    out x, 20 //;take ioreq and A0 to x
+    jmp x-- start //; if ioreq+A0 != 0 return (may be wait to skip this cycle completely???)
+    jmp pin start //; if /CWE = 1 return (may be wait to skip this cycle completely???)
+    mov osr, ::osr //; reverse
+    out null, 20 //;discard zeros after reversing
+    out isr, 3 //;send border color to DMA via ISR and FIFO
+    push block [31] 
+    out pins, 2 [31] //; out mic and ear  // wait cycles to wait till T3 so CPU completed io operation. 
+//;    mov pins, ~osr //; some sources says bit value 0 = speacker/mic active, 1 = speacker/mic inactive.  
+//;   wait 1 jmppin //; wait for /CWE = 1
 .wrap
 
 % c-sdk {
 static inline void OUT_FE_program_init(PIO pio, uint sm, uint offset, uint CWEpin, uint Q0pin, uint MICpin) {
     pio_sm_config c = OUT_FE_program_get_default_config(offset);
-    sm_config_set_clkdiv_int_frac8(&c, 1, 64); //151.2MHz 
+    sm_config_set_clkdiv_int_frac8(&c, 1, 64); //151.2MHz at 189MHz
     sm_config_set_out_pins(&c, MICpin, 2);
     sm_config_set_in_pins(&c, Q0pin);
     sm_config_set_in_pin_count(&c, 14);

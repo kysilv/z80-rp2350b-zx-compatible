@@ -8,12 +8,12 @@
 .wrap_target    
     mov x, osr side 0
 loopLow:    
-//;    wait 1 irq prev 0 
+//;    wait 1 irq prev 0 ; commented out - now it is self-driven
     jmp x-- loopLow
     irq set 0 rel side 1 ; // set start of high level vsync/hsync
     mov x, y 
 loopHigh:
-//;    wait 1 irq prev 0 
+//;    wait 1 irq prev 0 ; commented out - now it is self-driven
     jmp x-- loopHigh
 .wrap
 
@@ -21,7 +21,7 @@ loopHigh:
 static inline void VGA_program_init(PIO pio, uint sm, uint offset, uint SYNCpin) {
     pio_sm_config c = VGA_program_get_default_config(offset);
     
-    sm_config_set_clkdiv(&c, 7); // 27MHz
+    sm_config_set_clkdiv(&c, 7); // 27MHz at 189MHz
     
     sm_config_set_sideset_pins(&c, SYNCpin); 
 

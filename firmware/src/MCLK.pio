@@ -9,8 +9,8 @@
 % c-sdk {
 static inline void MCLK_program_init(PIO pio, uint sm, uint offset) {
     pio_sm_config c = MCLK_program_get_default_config(offset);
-//;    sm_config_set_clkdiv(&c, 22); //7MHz
-    sm_config_set_clkdiv(&c, 27); //7MHz    
+//;    sm_config_set_clkdiv(&c, 22); //7MHz at 154MHz
+    sm_config_set_clkdiv(&c, 27); //7MHz    at 189MHz
 
     pio_sm_init(pio, sm, offset, &c);
 

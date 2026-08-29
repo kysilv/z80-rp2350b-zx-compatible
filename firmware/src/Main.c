@@ -99,7 +99,7 @@ void dma_handler() {
 int main()
 {
 //    set_sys_clock_khz(154000, true);
-    set_sys_clock_khz(189000, true);    
+    set_sys_clock_khz(189000, true);    // for HDMI timings
 
     gpio_init(UCLK); 
     gpio_set_dir(UCLK, true);
@@ -294,16 +294,14 @@ int main()
 
     pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 800-1-2); //hsync high in 27MHz clocks
     pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 64-1-1); // hsync low in 27MHz clocks
-    
 
     VGA_program_init(VGApio, VGA_VSYNCsm, VGAoffset, VSYNC);
 
 //    pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  (69888-112*5)*2-1); 
 //    pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 112*5*2-1); 
 
-    pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  534816-1-2); // must be 535680 for 620 active lines, 534816 for 619 lines
-    pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 4320-1-1); // VSYNC = low for 5 lines 4320
-
+    pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  534816-1-2); // must be 535680 for 620 active lines, 534816 for 619 lines in 27MHz clocks
+    pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 4320-1-1); // VSYNC = low for 5 lines in 27MHz clocks
 
     activevideo_program_init(VGApio, activevideosm, activevideooffset);
     pio_sm_put_blocking(VGApio, activevideosm, 38-1); //39 lines to skip for vertical backporch
@@ -336,7 +334,7 @@ int main()
     pwm_config_set_wrap(&cfg, 6); // 189000000/(7*(1+0/16)) = 27,000,000Hz
     pwm_init(slice, &cfg, false);
 
-    pwm_set_chan_level(slice, chan, 3);  // 4?
+    pwm_set_chan_level(slice, chan, 3);  
 
     multicore_launch_core1(handle_VRAM_read); // core1 to handle video RAM read process 
 

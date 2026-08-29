@@ -12,7 +12,7 @@ backporch:
     jmp x-- backporch [7] side 0 ; // hline backporch and center the visible line 
     mov x, y side 1
 hline:
-//;    pull block side 1
+//;    pull block side 1 ; now autopull
     out pins, 4 [2] side 1
     jmp x-- hline side 1
     set pins, 0 side 1 [15]
@@ -23,7 +23,7 @@ hline:
 static inline void VRAM_VGA_program_init(PIO pio, uint sm, uint offset, uint VGApin, uint DEpin) {
     pio_sm_config c = VRAM_VGA_program_get_default_config(offset);
 //    sm_config_set_clkdiv(&c, 2.75); //56MHz
-    sm_config_set_clkdiv_int_frac8(&c, 3, 128); //54MHz  
+    sm_config_set_clkdiv_int_frac8(&c, 3, 128); //54MHz  at 189MHz
     sm_config_set_set_pins(&c, VGApin, 4);
     sm_config_set_out_pins(&c, VGApin, 4);
     sm_config_set_sideset_pins(&c, DEpin);
