@@ -10,7 +10,7 @@ start:
     jmp pin start //; if /CWE = 1 return (may be wait to skip this cycle completely???)
     mov osr, ::osr //; reverse
     out null, 20 //;discard zeros after reversing
-    out isr, 3 //;send border color to DMA via ISR and FIFO
+    out isr, 3 [17]//;send border color to DMA via ISR and FIFO
     push block [31] 
     out pins, 2 [31] //; out mic and ear  // wait cycles to wait till T3 so CPU completed io operation. 
 //;    mov pins, ~osr //; some sources says bit value 0 = speacker/mic active, 1 = speacker/mic inactive.  
@@ -20,7 +20,7 @@ start:
 % c-sdk {
 static inline void OUT_FE_program_init(PIO pio, uint sm, uint offset, uint CWEpin, uint Q0pin, uint MICpin) {
     pio_sm_config c = OUT_FE_program_get_default_config(offset);
-    sm_config_set_clkdiv_int_frac8(&c, 1, 64); //151.2MHz at 189MHz
+    sm_config_set_clkdiv_int_frac8(&c, 2, 0); //94.5MHz
     sm_config_set_out_pins(&c, MICpin, 2);
     sm_config_set_in_pins(&c, Q0pin);
     sm_config_set_in_pin_count(&c, 14);

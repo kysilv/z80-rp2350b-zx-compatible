@@ -7,7 +7,7 @@
     mov y, osr side 0 ;//352 pixels, 352 bytes
 .wrap_target
     wait 1 irq 2 side 0 ;// wait for active line start
-    set x, 22 side 0 //21
+    set x, 19 side 0 //;21
 backporch:
     jmp x-- backporch [7] side 0 ; // hline backporch and center the visible line 
     mov x, y side 1
