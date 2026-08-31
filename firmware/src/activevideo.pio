@@ -13,7 +13,7 @@ vblank:
     jmp x-- vblank 
     mov x, osr
 hactive:    
-    wait 1 irq 0 // wait for start of high level hsync 
+    wait 1 irq 0 [1]// wait for start of high level hsync and 1 cycle for DVI sync
     irq set 2 // set irq to indicate start of visible (active) line
     jmp x-- hactive
 .wrap

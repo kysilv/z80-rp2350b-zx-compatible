@@ -170,10 +170,10 @@ int main()
     uint VGAoffset = 0;
 
     uint activevideosm = 2;
-    uint activevideooffset = 10;
+    uint activevideooffset = 8;
 
     uint VRAM_VGAsm = 3;
-    uint VRAM_VGAoffset = 22;
+    uint VRAM_VGAoffset = 20;
 
     PIO Read_VRAMpio = pio2;
 
