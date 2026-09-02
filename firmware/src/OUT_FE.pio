@@ -20,7 +20,7 @@ start:
 % c-sdk {
 static inline void OUT_FE_program_init(PIO pio, uint sm, uint offset, uint CWEpin, uint Q0pin, uint MICpin) {
     pio_sm_config c = OUT_FE_program_get_default_config(offset);
-    sm_config_set_clkdiv_int_frac8(&c, 2, 0); //94.5MHz
+    sm_config_set_clkdiv_int_frac8(&c, 2, 0); //94.5MHz for 189MHz or 77MHz for 154MHz
     sm_config_set_out_pins(&c, MICpin, 2);
     sm_config_set_in_pins(&c, Q0pin);
     sm_config_set_in_pin_count(&c, 14);

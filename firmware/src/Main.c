@@ -7,19 +7,38 @@
 #include "hardware/pwm.h"
 #include "Pin_defs.h"
 
+//for 189MHz
 #include "MCLK.pio.h"
 #include "CPUCLK.pio.h"
 #include "IN_FE.pio.h"
 #include "OUT_FE.pio.h"
 
+//for 154MHz
+#include "MCLK154.pio.h"
+#include "CPUCLK154.pio.h"
+#include "IN_FE154.pio.h"
+
+//for 189MHz
 #include "VGA.pio.h"
 #include "activevideo.pio.h"
 #include "VRAM_VGA.pio.h"
 
+//for 154MHz
+#include "VGA154.pio.h"
+#include "activevideo154.pio.h"
+#include "VRAM_VGA154.pio.h"
+
+//for 189MHz
 #include "INT.pio.h"
 #include "Read_frame.pio.h"
 #include "Read_line.pio.h"
 #include "Read_VRAM.pio.h"
+
+//for 154MHz
+#include "INT154.pio.h"
+#include "Read_frame154.pio.h"
+#include "Read_line154.pio.h"
+#include "Read_VRAM154.pio.h"
 
 #define pixel_bytes_count 98304
 
@@ -96,10 +115,30 @@ void dma_handler() {
     dma_channel_set_read_addr(ctrl_chan, &control_blocks[0], true);    
 }
 
+bool VGAconnected() {
+
+    gpio_init(VGA_B); 
+    gpio_set_dir(VGA_B, true);
+    gpio_put(VGA_B, true); 
+    
+    sleep_us(1);
+
+    gpio_init(BRIGHT); 
+    gpio_set_dir(BRIGHT, false);
+    return !gpio_get(BRIGHT); 
+
+}
+
 int main()
 {
-//    set_sys_clock_khz(154000, true);
-    set_sys_clock_khz(189000, true);    // for HDMI timings
+
+    bool VGAoutput = VGAconnected();
+
+    if (VGAoutput) {
+         set_sys_clock_khz(154000, true);
+    } else {
+        set_sys_clock_khz(189000, true);    // for HDMI timings
+    }
 
     gpio_init(UCLK); 
     gpio_set_dir(UCLK, true);
@@ -117,39 +156,7 @@ int main()
     gpio_init(UBUS); 
     gpio_set_dir(UBUS, true);
     gpio_put(UBUS, true);  // set UBUS = 1
-
-
-  /*  
-    gpio_init(EAR); 
-    gpio_set_drive_strength(EAR, GPIO_DRIVE_STRENGTH_4MA);
-    gpio_set_dir(EAR, true); // direction = OUT
-    gpio_put(EAR, false); // 
-
-    gpio_init(MIC); 
-    gpio_set_drive_strength(MIC, GPIO_DRIVE_STRENGTH_4MA);
-    gpio_set_dir(MIC, true); // direction = OUT
-    gpio_put(MIC, false); // 
-
-    gpio_init(VGA_R); 
-    gpio_set_drive_strength(VGA_R, GPIO_DRIVE_STRENGTH_8MA);
-    gpio_set_dir(VGA_R, true); // direction = OUT
-    gpio_put(VGA_R, false); // 
-
-    gpio_init(VGA_B); 
-    gpio_set_drive_strength(VGA_B, GPIO_DRIVE_STRENGTH_8MA);
-    gpio_set_dir(VGA_B, true); // direction = OUT
-    gpio_put(VGA_B, false); // 
-
-    gpio_init(VGA_G); 
-    gpio_set_drive_strength(VGA_G, GPIO_DRIVE_STRENGTH_8MA);
-    gpio_set_dir(VGA_G, true); // direction = OUT
-    gpio_put(VGA_G, false); // 
-
-    gpio_init(BRIGHT); 
-    gpio_set_drive_strength(BRIGHT, GPIO_DRIVE_STRENGTH_12MA);
-    gpio_set_dir(BRIGHT, true); // direction = OUT
-    gpio_put(BRIGHT, false); // 
-*/
+ 
     PIO MCLKpio = pio0;
     uint MCLKsm = 0;
     uint MCLKoffset = 0;
@@ -170,10 +177,10 @@ int main()
     uint VGAoffset = 0;
 
     uint activevideosm = 2;
-    uint activevideooffset = 8;
+    uint activevideooffset = 10;
 
     uint VRAM_VGAsm = 3;
-    uint VRAM_VGAoffset = 20;
+    uint VRAM_VGAoffset = 22;
 
     PIO Read_VRAMpio = pio2;
 
@@ -194,19 +201,36 @@ int main()
     success = pio_set_gpio_base(MCLKpio, 16);
     success = pio_set_gpio_base(VGApio, 16);
     success = pio_set_gpio_base(Read_VRAMpio, 0);
-    success = pio_add_program_at_offset(MCLKpio, &MCLK_program, MCLKoffset);
-    success = pio_add_program_at_offset(MCLKpio, &CPUCLK_program, CPUCLKoffset);
-    success = pio_add_program_at_offset(MCLKpio, &IN_FE_program, IN_FEoffset);
-    success = pio_add_program_at_offset(MCLKpio, &OUT_FE_program, OUT_FEoffset);
 
-    success = pio_add_program_at_offset(VGApio, &VGA_program, VGAoffset);    
-    success = pio_add_program_at_offset(VGApio, &activevideo_program, activevideooffset);        
-    success = pio_add_program_at_offset(VGApio, &VRAM_VGA_program, VRAM_VGAoffset);        
+    if (VGAoutput) {    
+        success = pio_add_program_at_offset(MCLKpio, &MCLK154_program, MCLKoffset);
+        success = pio_add_program_at_offset(MCLKpio, &CPUCLK154_program, CPUCLKoffset);
+        success = pio_add_program_at_offset(MCLKpio, &IN_FE154_program, IN_FEoffset);
+        success = pio_add_program_at_offset(MCLKpio, &OUT_FE_program, OUT_FEoffset);
 
-    success = pio_add_program_at_offset(Read_VRAMpio, &INT_program, INToffset);
-    success = pio_add_program_at_offset(Read_VRAMpio, &Read_frame_program, Read_frameoffset);        
-    success = pio_add_program_at_offset(Read_VRAMpio, &Read_line_program, Read_lineoffset);        
-    success = pio_add_program_at_offset(Read_VRAMpio, &Read_VRAM_program, Read_VRAMoffset);    
+        success = pio_add_program_at_offset(VGApio, &VGA154_program, VGAoffset);    
+        success = pio_add_program_at_offset(VGApio, &activevideo154_program, activevideooffset);        
+        success = pio_add_program_at_offset(VGApio, &VRAM_VGA154_program, VRAM_VGAoffset);        
+
+        success = pio_add_program_at_offset(Read_VRAMpio, &INT154_program, INToffset);
+        success = pio_add_program_at_offset(Read_VRAMpio, &Read_frame154_program, Read_frameoffset);        
+        success = pio_add_program_at_offset(Read_VRAMpio, &Read_line154_program, Read_lineoffset);        
+        success = pio_add_program_at_offset(Read_VRAMpio, &Read_VRAM154_program, Read_VRAMoffset);    
+    } else {
+        success = pio_add_program_at_offset(MCLKpio, &MCLK_program, MCLKoffset);
+        success = pio_add_program_at_offset(MCLKpio, &CPUCLK_program, CPUCLKoffset);
+        success = pio_add_program_at_offset(MCLKpio, &IN_FE_program, IN_FEoffset);
+        success = pio_add_program_at_offset(MCLKpio, &OUT_FE_program, OUT_FEoffset);        
+
+        success = pio_add_program_at_offset(VGApio, &VGA_program, VGAoffset);    
+        success = pio_add_program_at_offset(VGApio, &activevideo_program, activevideooffset);        
+        success = pio_add_program_at_offset(VGApio, &VRAM_VGA_program, VRAM_VGAoffset);        
+
+        success = pio_add_program_at_offset(Read_VRAMpio, &INT_program, INToffset);
+        success = pio_add_program_at_offset(Read_VRAMpio, &Read_frame_program, Read_frameoffset);        
+        success = pio_add_program_at_offset(Read_VRAMpio, &Read_line_program, Read_lineoffset);        
+        success = pio_add_program_at_offset(Read_VRAMpio, &Read_VRAM_program, Read_VRAMoffset);    
+    }
 
     ctrl_chan = dma_claim_unused_channel(true);
     data_chan = dma_claim_unused_channel(true);
@@ -286,40 +310,70 @@ int main()
     irq_set_exclusive_handler(DMA_IRQ_0, dma_handler);
     irq_set_enabled(DMA_IRQ_0, true);
 
-    CPUCLK_program_init(MCLKpio, CPUCLKsm, CPUCLKoffset, UCLK, UBUS);
-    VGA_program_init(VGApio, VGA_HSYNCsm, VGAoffset, HSYNC);
+    if (VGAoutput) {
+        CPUCLK154_program_init(MCLKpio, CPUCLKsm, CPUCLKoffset, UCLK, UBUS);
 
-//    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 207-1); //hsync high in 7MHz clocks 207
-//    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 17-1); // hsync low  in 7MHz clocks
+        VGA154_program_init(VGApio, VGA_HSYNCsm, VGAoffset, HSYNC);
+        pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 207-1); //hsync high in 7MHz clocks 207
+        pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 17-1); // hsync low  in 7MHz clocks
 
-    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 800-1-2); //hsync high in 27MHz clocks
-    pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 64-1-1); // hsync low in 27MHz clocks
+        VGA154_program_init(VGApio, VGA_VSYNCsm, VGAoffset, VSYNC);
+        pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  (69888-112*5)*2-1); 
+        pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 112*5*2-1); 
 
-    VGA_program_init(VGApio, VGA_VSYNCsm, VGAoffset, VSYNC);
+        activevideo154_program_init(VGApio, activevideosm, activevideooffset);
+        pio_sm_put_blocking(VGApio, activevideosm, 38-1); //39 lines to skip for vertical backporch
+        pio_sm_put_blocking(VGApio, activevideosm, 575-1); //576 lines in frame
 
-//    pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  (69888-112*5)*2-1); 
-//    pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 112*5*2-1); 
+        VRAM_VGA154_program_init(VGApio, VRAM_VGAsm, VRAM_VGAoffset, VGA_B);
+        pio_sm_put_blocking(VGApio, VRAM_VGAsm, 352-1); //352 pixels in line
 
-    pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  534816-1-2); // must be 535680 for 620 active lines, 534816 for 619 lines in 27MHz clocks
-    pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 4320-1-1); // VSYNC = low for 5 lines in 27MHz clocks
+        INT154_program_init(Read_VRAMpio, INTsm, INToffset, INT);
+        pio_sm_put_blocking(Read_VRAMpio, INTsm, 891); //892 (891 = ~14330 T in total before 1st pixel, which is better than 892)
 
-    activevideo_program_init(VGApio, activevideosm, activevideooffset);
-    pio_sm_put_blocking(VGApio, activevideosm, 38-1); //39 lines to skip for vertical backporch
-    pio_sm_put_blocking(VGApio, activevideosm, 575-1); //576 lines in frame
-    VRAM_VGA_program_init(VGApio, VRAM_VGAsm, VRAM_VGAoffset, VGA_B, DE);
-    pio_sm_put_blocking(VGApio, VRAM_VGAsm, 352-1); //352 pixels in line
+        Read_frame154_program_init(Read_VRAMpio, Read_framesm, Read_frameoffset);
+        pio_sm_put_blocking(Read_VRAMpio, Read_framesm, 192-1); //192 lines
+        
+        Read_line154_program_init(Read_VRAMpio, Read_linesm, Read_lineoffset, UCS, URD);
+        Read_VRAM154_program_init(Read_VRAMpio, Read_VRAMsm, Read_VRAMoffset, URD, Y0, Q0);    
 
-    INT_program_init(Read_VRAMpio, INTsm, INToffset, INT);
-    pio_sm_put_blocking(Read_VRAMpio, INTsm, 891); //892 (891 = ~14330 T in total before 1st pixel, which is better than 892)
-    Read_frame_program_init(Read_VRAMpio, Read_framesm, Read_frameoffset);
-    pio_sm_put_blocking(Read_VRAMpio, Read_framesm, 192-1); //192 lines
-    Read_line_program_init(Read_VRAMpio, Read_linesm, Read_lineoffset, UCS, URD);
-    Read_VRAM_program_init(Read_VRAMpio, Read_VRAMsm, Read_VRAMoffset, URD, Y0, Q0);    
+        IN_FE154_program_init(MCLKpio, IN_FEsm, IN_FEoffset, Q0, IORQ);
+        OUT_FE_program_init(MCLKpio, OUT_FEsm, OUT_FEoffset, CWE, Q0, MIC);
 
-    IN_FE_program_init(MCLKpio, IN_FEsm, IN_FEoffset, Q0, IORQ);
-    OUT_FE_program_init(MCLKpio, OUT_FEsm, OUT_FEoffset, CWE, Q0, MIC);
+        MCLK154_program_init(MCLKpio, MCLKsm, MCLKoffset);
+    } else {
 
-    MCLK_program_init(MCLKpio, MCLKsm, MCLKoffset);
+        CPUCLK_program_init(MCLKpio, CPUCLKsm, CPUCLKoffset, UCLK, UBUS);
+    
+        VGA_program_init(VGApio, VGA_HSYNCsm, VGAoffset, HSYNC);
+        pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 800-1-2); //hsync high in 27MHz clocks
+        pio_sm_put_blocking(VGApio, VGA_HSYNCsm, 64-1-1); // hsync low in 27MHz clocks
+
+        VGA_program_init(VGApio, VGA_VSYNCsm, VGAoffset, VSYNC);
+        pio_sm_put_blocking(VGApio, VGA_VSYNCsm,  534816-1-2); // must be 535680 for 620 active lines, 534816 for 619 lines in 27MHz clocks
+        pio_sm_put_blocking(VGApio, VGA_VSYNCsm, 4320-1-1); // VSYNC = low for 5 lines in 27MHz clocks
+
+        activevideo_program_init(VGApio, activevideosm, activevideooffset);
+        pio_sm_put_blocking(VGApio, activevideosm, 38-1); //39 lines to skip for vertical backporch
+        pio_sm_put_blocking(VGApio, activevideosm, 575-1); //576 lines in frame
+
+        VRAM_VGA_program_init(VGApio, VRAM_VGAsm, VRAM_VGAoffset, VGA_B, DE);
+        pio_sm_put_blocking(VGApio, VRAM_VGAsm, 352-1); //352 pixels in line
+
+        INT_program_init(Read_VRAMpio, INTsm, INToffset, INT);
+        pio_sm_put_blocking(Read_VRAMpio, INTsm, 891); //892 (891 = ~14330 T in total before 1st pixel, which is better than 892)
+
+        Read_frame_program_init(Read_VRAMpio, Read_framesm, Read_frameoffset);
+        pio_sm_put_blocking(Read_VRAMpio, Read_framesm, 192-1); //192 lines
+
+        Read_line_program_init(Read_VRAMpio, Read_linesm, Read_lineoffset, UCS, URD);
+        Read_VRAM_program_init(Read_VRAMpio, Read_VRAMsm, Read_VRAMoffset, URD, Y0, Q0);    
+
+        IN_FE_program_init(MCLKpio, IN_FEsm, IN_FEoffset, Q0, IORQ);
+        OUT_FE_program_init(MCLKpio, OUT_FEsm, OUT_FEoffset, CWE, Q0, MIC);
+
+        MCLK_program_init(MCLKpio, MCLKsm, MCLKoffset);
+    }
 
 // set up HDMI/DVI pixel clock:    
 
@@ -340,7 +394,7 @@ int main()
 
     dma_start_channel_mask((1u << ctrl_chan));    
 
-    pwm_set_enabled(slice, true);
+    if (!VGAoutput) pwm_set_enabled(slice, true); // start 27MHz pixel clock if HDMI/DVI
 
     MCLKpio->ctrl = 0b101111111110000111100001111; // start everything at once
 

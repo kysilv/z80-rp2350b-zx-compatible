@@ -42,14 +42,27 @@ pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/CPUCLK.pio)
 pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/IN_FE.pio)
 pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/OUT_FE.pio)
 
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/MCLK154.pio)
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/CPUCLK154.pio)
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/IN_FE154.pio)
+
 pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/VGA.pio)
 pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/activevideo.pio)
 pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/VRAM_VGA.pio)
+
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/VGA154.pio)
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/activevideo154.pio)
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/VRAM_VGA154.pio)
 
 pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/INT.pio)
 pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/Read_frame.pio)
 pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/Read_line.pio)
 pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/Read_VRAM.pio)
+
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/INT154.pio)
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/Read_frame154.pio)
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/Read_line154.pio)
+pico_generate_pio_header(rp2350bULA ${CMAKE_CURRENT_LIST_DIR}/src/Read_VRAM154.pio)
 
 pico_set_program_name(rp2350bULA "rp2350bULA")
 pico_set_program_version(rp2350bULA "0.1")
